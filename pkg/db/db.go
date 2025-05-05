@@ -16,7 +16,7 @@ func (lw *logrusWriter) Printf(format string, v ...interface{}) {
 	logger.Log.Infof(format, v...);
 }
 
-func Init() {
+func Init() *gorm.DB {
 	if err := config.Load(); err != nil {
 		logger.Log.Fatalf("failed to load config: %v", err);
 	}
@@ -49,4 +49,6 @@ func Init() {
 
 	DB = dbConn;
 	logger.Log.Info("database connection established");
+
+	return DB;
 }

@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 
+	"github.com/d02ev/ecommerce-api/internal/user"
 	"github.com/d02ev/ecommerce-api/pkg/config"
 	"github.com/d02ev/ecommerce-api/pkg/db"
 	"github.com/d02ev/ecommerce-api/pkg/logger"
@@ -21,7 +22,7 @@ func main() {
 	// logger initialization
 	logger.Init(viper.GetString("LOG_LEVEL"));
 	// database initialization
-	db.Init();
+	db := db.Init();
 
 	r.Use(gin.LoggerWithWriter(logger.Log.Out));
 	r.Use(gin.RecoveryWithWriter(logger.Log.Out));
@@ -29,6 +30,10 @@ func main() {
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(200, gin.H{ "message": "pong" });
 	});
+
+	api := r.Group("/api");
+
+	user.InitUserModule(api, db);
 
 	port := viper.GetString("PORT");
 

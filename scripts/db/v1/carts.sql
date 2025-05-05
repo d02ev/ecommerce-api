@@ -3,6 +3,7 @@ CREATE TABLE IF NOT EXISTS carts (
   created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
   user_id INT NOT NULL,
-  CONSTRAINT fk_carts_user_id FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+  CONSTRAINT fk_carts_user_id FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+  CONSTRAINT uq_carts_user_id UNIQUE (user_id)
 );
 CREATE INDEX idx_carts_user_id ON carts (user_id);
