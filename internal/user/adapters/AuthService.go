@@ -8,6 +8,7 @@ import (
 	"github.com/d02ev/ecommerce-api/internal/user/domain"
 	"github.com/d02ev/ecommerce-api/internal/user/ports"
 	"github.com/d02ev/ecommerce-api/pkg/custom_errors"
+	"github.com/golang-jwt/jwt/v5"
 	"gorm.io/gorm"
 )
 
@@ -85,4 +86,29 @@ func (as *AuthService) LoginUser(email, password string) (*dto.LoginUserResponse
 	}
 
 	return dto.NewLoginUserResponse(accessToken, refreshToken), nil
+}
+
+func (as *AuthService) RefreshAccessToken(refreshToken string) (string, error) {
+	userId, err := as.tokenService.DecodeRefreshToken(refreshToken); if err != nil {
+		if errors.Is(err, jwt.ErrTokenExpired) {
+			return "", domain.ErrTokenExpired;
+		} else {
+			return "", domain.ErrValidatingToken;
+		}
+	}
+
+	user, err := as.userRepository.FindByID(userId);
+	if err != nil {
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return "", custom_errors.ErrInternalServerError
+		}
+		return "", domain.ErrUserNotFound
+	}
+
+	accessToken, err := as.tokenService.GenerateAccessToken(user.ID, user.Role)
+	if err != nil {
+		return "", custom_errors.ErrInternalServerError
+	}
+	
+	return accessToken, nil
 }

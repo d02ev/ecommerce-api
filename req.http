@@ -20,3 +20,14 @@ Accept: application/json
   "email": "john.doe@example.com",
   "password": "p@ssw0rd"
 }
+
+### Refresh Access Token
+POST {{BASE_URL}}/auth/refresh-token
+Content-Type: application/json
+Accept: application/json
+
+### Logout User
+POST {{BASE_URL}}/auth/logout
+Content-Type: application/json
+Accept: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhZG1pbiI6ZmFsc2UsImlzcyI6ImVjb21tZXJjZS1hcGkiLCJzdWIiOiIxIiwiZXhwIjoxNzQ2NTYxNzQwLCJpYXQiOjE3NDY1NTgxNzR9.rq9jjoAoefZ7CWxYR7CyIFurk0OAQKgw2O8zF1KAhbg

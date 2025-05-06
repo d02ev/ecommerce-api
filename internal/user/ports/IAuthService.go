@@ -7,5 +7,5 @@ import (
 type IAuthService interface {
 	RegisterUser(name, email, password string) (*dto.RegisterUserResponse, error)
 	LoginUser(email, password string) (*dto.LoginUserResponse, error)
-	// RefreshAccessToken(refreshToken string) (string, error)
+	RefreshAccessToken(refreshToken string) (string, error)
 }
