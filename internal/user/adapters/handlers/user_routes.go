@@ -12,3 +12,8 @@ func RegisterAuthRoutes(rg *gin.RouterGroup, handler *AuthHandler) {
 	auth.POST("/refresh-token", handler.RefreshToken);
 	auth.POST("/logout", middleware.AuthHandler(), handler.Logout);
 }
+
+func RegisterUserRoutes(rg *gin.RouterGroup, handler *UserHandler) {
+	user := rg.Group("/user");
+	user.GET("/me", middleware.AuthHandler(), handler.Me);
+}

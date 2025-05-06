@@ -13,6 +13,9 @@ func InitUserModule(router *gin.RouterGroup, db *gorm.DB) {
 	passwordService := adapters.NewPasswordService();
 	tokenService := adapters.NewTokenService();
 	authService := adapters.NewAuthService(userRepository, passwordService, tokenService);
+	userService := adapters.NewUserService(userRepository);
 	authHandler := handlers.NewAuthHandler(authService);
+	userHandler := handlers.NewUserHandler(userService);
 	handlers.RegisterAuthRoutes(router, authHandler);
+	handlers.RegisterUserRoutes(router, userHandler);
 }
