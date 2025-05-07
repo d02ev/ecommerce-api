@@ -1,34 +1,35 @@
 package db
 
 import (
-	"time"
+	"github.com/d02ev/ecommerce-api/pkg/config"
+	"github.com/d02ev/ecommerce-api/pkg/logger"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	gormLogger "gorm.io/gorm/logger"
-	"github.com/d02ev/ecommerce-api/pkg/config"
-	"github.com/d02ev/ecommerce-api/pkg/logger"
+	"time"
 )
 
-var DB *gorm.DB;
-type logrusWriter struct {}
+var DB *gorm.DB
+
+type logrusWriter struct{}
 
 func (lw *logrusWriter) Printf(format string, v ...interface{}) {
-	logger.Log.Infof(format, v...);
+	logger.Log.Infof(format, v...)
 }
 
 func Init() *gorm.DB {
 	if err := config.Load(); err != nil {
-		logger.Log.Fatalf("failed to load config: %v", err);
+		logger.Log.Fatalf("failed to load config: %v", err)
 	}
 
-	dsn := config.DBConnectionString();
+	dsn := config.DBConnectionString()
 	gormLog := gormLogger.New(
 		&logrusWriter{},
 		gormLogger.Config{
-			SlowThreshold: time.Second,
-			LogLevel:      gormLogger.Warn,
+			SlowThreshold:             time.Second,
+			LogLevel:                  gormLogger.Warn,
 			IgnoreRecordNotFoundError: true,
-			Colorful: false,
+			Colorful:                  false,
 		},
 	)
 
@@ -36,19 +37,19 @@ func Init() *gorm.DB {
 		Logger: gormLog,
 	})
 	if err != nil {
-		logger.Log.Fatalf("failed to connect to database: %v", err);
+		logger.Log.Fatalf("failed to connect to database: %v", err)
 	}
 
-	sqlDB, err := dbConn.DB();
+	sqlDB, err := dbConn.DB()
 	if err != nil {
-		logger.Log.Fatalf("failed to get sqlDB: %v", err);
+		logger.Log.Fatalf("failed to get sqlDB: %v", err)
 	}
-	sqlDB.SetMaxIdleConns(10);
-	sqlDB.SetMaxOpenConns(100);
-	sqlDB.SetConnMaxLifetime(time.Hour);
+	sqlDB.SetMaxIdleConns(10)
+	sqlDB.SetMaxOpenConns(100)
+	sqlDB.SetConnMaxLifetime(time.Hour)
 
-	DB = dbConn;
-	logger.Log.Info("database connection established");
+	DB = dbConn
+	logger.Log.Info("database connection established")
 
-	return DB;
+	return DB
 }

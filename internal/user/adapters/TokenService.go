@@ -9,9 +9,9 @@ import (
 )
 
 type TokenService struct {
-	accessTokenSecretKey string
-	refreshTokenSecretKey string
-	accessTokenExpirationTime time.Time
+	accessTokenSecretKey       string
+	refreshTokenSecretKey      string
+	accessTokenExpirationTime  time.Time
 	refreshTokenExpirationTime time.Time
 }
 
@@ -22,16 +22,18 @@ type CustomClaims struct {
 
 func NewTokenService() *TokenService {
 	return &TokenService{
-		accessTokenSecretKey: viper.GetString("ACCESS_TOKEN_SECRET"),
-		refreshTokenSecretKey: viper.GetString("REFRESH_TOKEN_SECRET"),
-		accessTokenExpirationTime: time.Now().Add(viper.GetDuration("ACCESS_TOKEN_EXPIRATION") * time.Hour),
+		accessTokenSecretKey:       viper.GetString("ACCESS_TOKEN_SECRET"),
+		refreshTokenSecretKey:      viper.GetString("REFRESH_TOKEN_SECRET"),
+		accessTokenExpirationTime:  time.Now().Add(viper.GetDuration("ACCESS_TOKEN_EXPIRATION") * time.Hour),
 		refreshTokenExpirationTime: time.Now().Add(viper.GetDuration("REFRESH_TOKEN_EXPIRATION") * time.Hour),
 	}
 }
 
 func (ts *TokenService) GenerateAccessToken(userId, role uint) (string, error) {
-	var isAdmin bool = false;
-	if role == 1 { isAdmin = true; }
+	var isAdmin bool = false
+	if role == 1 {
+		isAdmin = true
+	}
 
 	claims := CustomClaims{
 		Admin: isAdmin,

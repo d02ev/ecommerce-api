@@ -13,21 +13,21 @@ import (
 )
 
 type AuthService struct {
-	userRepository ports.IUserRepository
+	userRepository  ports.IUserRepository
 	passwordService ports.IPasswordService
-	tokenService 	ports.ITokenService
+	tokenService    ports.ITokenService
 }
 
 func NewAuthService(userRepository ports.IUserRepository, passwordService ports.IPasswordService, tokenService ports.ITokenService) *AuthService {
 	return &AuthService{
-		userRepository: userRepository,
+		userRepository:  userRepository,
 		passwordService: passwordService,
-		tokenService: tokenService,
+		tokenService:    tokenService,
 	}
 }
 
-func (as *AuthService) RegisterUser(name, email, password string) (*dto.RegisterUserResponse, error) {
-	existingUser, err := as.userRepository.FindByEmail(email);
+func (as *AuthService) RegisterUser(registerUserDto dto.RegisterUserDto) (*dto.RegisterUserResponse, error) {
+	existingUser, err := as.userRepository.FindByEmail(registerUserDto.Email)
 	if err != nil {
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, custom_errors.ErrInternalServerError
@@ -38,21 +38,21 @@ func (as *AuthService) RegisterUser(name, email, password string) (*dto.Register
 		return nil, domain.ErrUserAlreadyExists
 	}
 
-	hashedPassword, err := as.passwordService.Hash(password);
+	hashedPassword, err := as.passwordService.Hash(registerUserDto.Password)
 	if err != nil {
-		return nil, custom_errors.ErrInternalServerError;
+		return nil, custom_errors.ErrInternalServerError
 	}
 
-	var role uint = 0;
-	if strings.Contains(email, "admin") {
+	var role uint = 0
+	if strings.Contains(registerUserDto.Email, "admin") {
 		role = 1
 	}
 
 	user := &domain.UserEntity{
-		Name:     name,
-		Email:    email,
+		Name:         registerUserDto.Name,
+		Email:        registerUserDto.Email,
 		PasswordHash: hashedPassword,
-		Role:    	role,
+		Role:         role,
 	}
 
 	err = as.userRepository.Save(user)
@@ -63,8 +63,8 @@ func (as *AuthService) RegisterUser(name, email, password string) (*dto.Register
 	return dto.NewRegisterUserResponse(), nil
 }
 
-func (as *AuthService) LoginUser(email, password string) (*dto.LoginUserResponse, error) {
-	user, err := as.userRepository.FindByEmail(email);
+func (as *AuthService) LoginUser(loginUserDto dto.LoginUserDto) (*dto.LoginUserResponse, error) {
+	user, err := as.userRepository.FindByEmail(loginUserDto.Email)
 	if err != nil {
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, custom_errors.ErrInternalServerError
@@ -72,7 +72,7 @@ func (as *AuthService) LoginUser(email, password string) (*dto.LoginUserResponse
 		return nil, domain.ErrUserNotFound
 	}
 
-	if !as.passwordService.Compare(user.PasswordHash, password) {
+	if !as.passwordService.Compare(user.PasswordHash, loginUserDto.Password) {
 		return nil, domain.ErrInvalidCredentials
 	}
 
@@ -85,19 +85,28 @@ func (as *AuthService) LoginUser(email, password string) (*dto.LoginUserResponse
 		return nil, custom_errors.ErrInternalServerError
 	}
 
+	err = as.userRepository.UpdateRefreshToken(user.ID, refreshToken)
+	if err != nil {
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, custom_errors.ErrInternalServerError
+		}
+		return nil, domain.ErrUserNotFound
+	}
+
 	return dto.NewLoginUserResponse(accessToken, refreshToken), nil
 }
 
 func (as *AuthService) RefreshAccessToken(refreshToken string) (string, error) {
-	userId, err := as.tokenService.DecodeRefreshToken(refreshToken); if err != nil {
+	userId, err := as.tokenService.DecodeRefreshToken(refreshToken)
+	if err != nil {
 		if errors.Is(err, jwt.ErrTokenExpired) {
-			return "", domain.ErrTokenExpired;
+			return "", domain.ErrTokenExpired
 		} else {
-			return "", domain.ErrValidatingToken;
+			return "", domain.ErrValidatingToken
 		}
 	}
 
-	user, err := as.userRepository.FindByID(userId);
+	user, err := as.userRepository.FindByID(userId)
 	if err != nil {
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
 			return "", custom_errors.ErrInternalServerError
@@ -109,6 +118,6 @@ func (as *AuthService) RefreshAccessToken(refreshToken string) (string, error) {
 	if err != nil {
 		return "", custom_errors.ErrInternalServerError
 	}
-	
+
 	return accessToken, nil
 }

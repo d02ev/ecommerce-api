@@ -3,8 +3,10 @@ package adapters
 import (
 	"errors"
 
+	"github.com/d02ev/ecommerce-api/internal/user/adapters/dto"
 	"github.com/d02ev/ecommerce-api/internal/user/domain"
 	"github.com/d02ev/ecommerce-api/internal/user/ports"
+	"github.com/d02ev/ecommerce-api/pkg/mapper"
 	"gorm.io/gorm"
 )
 
@@ -18,24 +20,16 @@ func NewUserService(userRepository ports.IUserRepository) *UserService {
 	}
 }
 
-func (us *UserService) GetUserDetails(userId uint) (*domain.UserEntity, error) {
-	user, err := us.UserRepository.FindByID(userId); if err != nil {
+func (us *UserService) GetUserDetails(userId uint) (*dto.UserDto, error) {
+	user, err := us.UserRepository.FindByID(userId)
+	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, domain.ErrUserNotFound
 		}
 		return nil, err
 	}
 
-	userEntity := &domain.UserEntity{
-		ID: user.ID,
-		Name: user.Name,
-		Email: user.Email,
-		Role: user.Role,
-		CreatedAt: user.CreatedAt,
-		UpdatedAt: user.UpdatedAt,
-		Addresses: user.Addresses,
+	userDto := mapper.MapUserEntityToDto(user)
 
-	}
-
-	return userEntity, nil
+	return userDto, nil
 }

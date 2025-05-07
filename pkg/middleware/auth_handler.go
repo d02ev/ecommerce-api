@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"strings"
 
-
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/spf13/viper"
@@ -23,45 +22,46 @@ func ValidateToken(token string) (*jwt.Token, error) {
 
 func AuthHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		authHeader := c.GetHeader("Authorization");
-		parts := strings.SplitN(authHeader, " ", 2);
+		authHeader := c.GetHeader("Authorization")
+		parts := strings.SplitN(authHeader, " ", 2)
 
 		if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
 				"status_code": http.StatusUnauthorized,
-				"message": "missing or malformed auth token",
-			});
-			return;
+				"message":     "missing or malformed auth token",
+			})
+			return
 		}
 
-		tokenString := parts[1];
-		fmt.Print("Token: ", tokenString, "\n");
-		token, err := ValidateToken(tokenString); if err != nil || !token.Valid {
+		tokenString := parts[1]
+		fmt.Print("Token: ", tokenString, "\n")
+		token, err := ValidateToken(tokenString)
+		if err != nil || !token.Valid {
 			if errors.Is(err, jwt.ErrTokenExpired) {
 				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
 					"status_code": http.StatusUnauthorized,
-					"message": "token expired",
-				});
+					"message":     "token expired",
+				})
 			} else {
 				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
 					"status_code": http.StatusUnauthorized,
-					"message": "invalid token",
-				});
+					"message":     "invalid token",
+				})
 			}
 
 			return
 		}
 
-		fmt.Print("Token claims: ", token.Claims.(jwt.MapClaims), "\n");
+		fmt.Print("Token claims: ", token.Claims.(jwt.MapClaims), "\n")
 
 		if claims, ok := token.Claims.(jwt.MapClaims); ok {
-			c.Set("user", claims);
-			c.Next();
+			c.Set("user", claims)
+			c.Next()
 		} else {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
 				"status_code": http.StatusUnauthorized,
-				"message": "cannot parse claims",
-			});
+				"message":     "cannot parse claims",
+			})
 			return
 		}
 	}

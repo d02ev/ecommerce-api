@@ -13,32 +13,32 @@ import (
 
 func main() {
 	if err := config.Load(); err != nil {
-		panic("Failed to load config: " + err.Error());
+		panic("Failed to load config: " + err.Error())
 	}
 
 	// create Gin
-	r := gin.New();
+	r := gin.New()
 
 	// logger initialization
-	logger.Init(viper.GetString("LOG_LEVEL"));
+	logger.Init(viper.GetString("LOG_LEVEL"))
 	// database initialization
-	db := db.Init();
+	db := db.Init()
 
-	r.Use(gin.LoggerWithWriter(logger.Log.Out));
-	r.Use(gin.RecoveryWithWriter(logger.Log.Out));
+	r.Use(gin.LoggerWithWriter(logger.Log.Out))
+	r.Use(gin.RecoveryWithWriter(logger.Log.Out))
 
 	r.GET("/ping", func(c *gin.Context) {
-		c.JSON(200, gin.H{ "message": "pong" });
-	});
+		c.JSON(200, gin.H{"message": "pong"})
+	})
 
-	api := r.Group("/api");
+	api := r.Group("/api")
 
-	user.InitUserModule(api, db);
+	user.InitUserModule(api, db)
 
-	port := viper.GetString("PORT");
+	port := viper.GetString("PORT")
 
-	logger.Log.Info(fmt.Sprintf("Server at http://localhost:%s", port));
+	logger.Log.Info(fmt.Sprintf("Server at http://localhost:%s", port))
 	if err := r.Run(fmt.Sprintf(":%s", port)); err != nil {
-		logger.Log.Fatal("Failed to run server: " + err.Error());
+		logger.Log.Fatal("Failed to run server: " + err.Error())
 	}
 }

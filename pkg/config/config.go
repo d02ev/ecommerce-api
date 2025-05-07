@@ -6,12 +6,12 @@ import (
 )
 
 func Load() error {
-	viper.SetConfigFile(".env");
+	viper.SetConfigFile(".env")
 	if err := viper.ReadInConfig(); err != nil {
-		return err;
+		return err
 	}
 
-	return nil;
+	return nil
 }
 
 func DBConnectionString() string {
@@ -21,5 +21,5 @@ func DBConnectionString() string {
 	password := viper.GetString("DB_PASSWORD")
 	dbName := viper.GetString("DB_NAME")
 
-	return fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s", host, port, user, password, dbName);
+	return fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s", host, port, user, password, dbName)
 }

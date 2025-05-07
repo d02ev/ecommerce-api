@@ -20,22 +20,25 @@ func NewUserHandler(userService ports.IUserService) *UserHandler {
 }
 
 func (uh *UserHandler) Me(c *gin.Context) {
-  claims := c.MustGet("user").(jwt.MapClaims);
-	subject, err := claims.GetSubject(); if err != nil {
+	claims := c.MustGet("user").(jwt.MapClaims)
+	subject, err := claims.GetSubject()
+	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"status_code": http.StatusUnauthorized,
 			"message":     "Unauthorized",
-		});
+		})
 	}
 
-	userId, err := strconv.Atoi(subject); if err != nil {
+	userId, err := strconv.Atoi(subject)
+	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"status_code": http.StatusBadRequest,
 			"message":     "Invalid user ID",
 		})
 	}
 
-	user, err := uh.userService.GetUserDetails(uint(userId)); if err != nil {
+	user, err := uh.userService.GetUserDetails(uint(userId))
+	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"status_code": http.StatusInternalServerError,
 			"message":     "Internal server error",
@@ -46,6 +49,6 @@ func (uh *UserHandler) Me(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"status_code": http.StatusOK,
 		"message":     "User details retrieved successfully",
-		"user": user,
+		"user":        user,
 	})
 }

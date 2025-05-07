@@ -12,9 +12,9 @@ import (
 )
 
 type CookieOptions struct {
-	Path 	 string
-	Domain 	 string
-	Secure 	 bool
+	Path     string
+	Domain   string
+	Secure   bool
 	HttpOnly bool
 }
 
@@ -27,25 +27,27 @@ func NewAuthHandler(authService ports.IAuthService) *AuthHandler {
 	return &AuthHandler{
 		authService: authService,
 		CookieOptions: CookieOptions{
-			Path: 	 viper.GetString("COOKIE_PATH"),
-			Domain: 	 viper.GetString("COOKIE_DOMAIN"),
-			Secure: 	 viper.GetBool("COOKIE_SECURE"),
+			Path:     viper.GetString("COOKIE_PATH"),
+			Domain:   viper.GetString("COOKIE_DOMAIN"),
+			Secure:   viper.GetBool("COOKIE_SECURE"),
 			HttpOnly: viper.GetBool("COOKIE_HTTP_ONLY"),
 		},
 	}
 }
 
 func (ah *AuthHandler) Register(c *gin.Context) {
-	var req dto.RegisterUserRequest;
+	var req dto.RegisterUserRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"status_code": http.StatusBadRequest,
 			"message":     "Invalid request",
-			"error": 		 err.Error(),
+			"error":       err.Error(),
 		})
 	}
 
-	res, err := ah.authService.RegisterUser(req.Name, req.Email, req.Password);
+	registerUserDto := dto.RegisterUserDto(req)
+
+	res, err := ah.authService.RegisterUser(registerUserDto)
 	if err != nil {
 		if errors.Is(err, domain.ErrUserAlreadyExists) {
 			c.JSON(http.StatusConflict, gin.H{
@@ -62,21 +64,23 @@ func (ah *AuthHandler) Register(c *gin.Context) {
 		}
 	}
 
-	c.JSON(http.StatusCreated, res);
+	c.JSON(http.StatusCreated, res)
 }
 
 func (ah *AuthHandler) Login(c *gin.Context) {
-	var req dto.LoginUserRequest;
+	var req dto.LoginUserRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"status_code": http.StatusBadRequest,
 			"message":     "Invalid request",
-			"error": 		 err.Error(),
+			"error":       err.Error(),
 		})
 		return
 	}
 
-	res, err := ah.authService.LoginUser(req.Email, req.Password);
+	loginUserDto := dto.LoginUserDto(req)
+
+	res, err := ah.authService.LoginUser(loginUserDto)
 	if err != nil {
 		if errors.Is(err, domain.ErrInvalidCredentials) {
 			c.JSON(http.StatusUnauthorized, gin.H{
@@ -93,13 +97,13 @@ func (ah *AuthHandler) Login(c *gin.Context) {
 		}
 	}
 
-	c.SetCookie("refresh_token", res.RefreshToken, 7 * 24 * 60 * 60, ah.Path, ah.Domain, ah.Secure, ah.HttpOnly);
-	c.SetCookie("access_token", res.AccessToken, 60 * 60 * 60, ah.Path, ah.Domain, ah.Secure, ah.HttpOnly);
-	c.JSON(http.StatusOK, res);
+	c.SetCookie("refresh_token", res.RefreshToken, 7*24*60*60, ah.Path, ah.Domain, ah.Secure, ah.HttpOnly)
+	c.SetCookie("access_token", res.AccessToken, 60*60*60, ah.Path, ah.Domain, ah.Secure, ah.HttpOnly)
+	c.JSON(http.StatusOK, res)
 }
 
 func (ah *AuthHandler) RefreshToken(c *gin.Context) {
-	refreshToken, err := c.Cookie("refresh_token");
+	refreshToken, err := c.Cookie("refresh_token")
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"status_code": http.StatusUnauthorized,
@@ -108,7 +112,7 @@ func (ah *AuthHandler) RefreshToken(c *gin.Context) {
 		return
 	}
 
-	res, err := ah.authService.RefreshAccessToken(refreshToken);
+	res, err := ah.authService.RefreshAccessToken(refreshToken)
 	if err != nil {
 		if errors.Is(err, domain.ErrTokenExpired) {
 			c.JSON(http.StatusUnauthorized, gin.H{
@@ -125,19 +129,19 @@ func (ah *AuthHandler) RefreshToken(c *gin.Context) {
 		}
 	}
 
-	c.SetCookie("access_token", res, 60 * 60 * 60, ah.Path, ah.Domain, ah.Secure, ah.HttpOnly);
-	c.SetCookie("refresh_token", refreshToken, 7 * 24 * 60 * 60, ah.Path, ah.Domain, ah.Secure, ah.HttpOnly);
+	c.SetCookie("access_token", res, 60*60*60, ah.Path, ah.Domain, ah.Secure, ah.HttpOnly)
+	c.SetCookie("refresh_token", refreshToken, 7*24*60*60, ah.Path, ah.Domain, ah.Secure, ah.HttpOnly)
 	c.JSON(http.StatusOK, gin.H{
 		"status_code": http.StatusOK,
-		"message": 	 "Access token refreshed",
-	});
+		"message":     "Access token refreshed",
+	})
 }
 
 func (ah *AuthHandler) Logout(c *gin.Context) {
-	c.SetCookie("refresh_token", "", -1, ah.Path, ah.Domain, ah.Secure, ah.HttpOnly);
-	c.SetCookie("access_token", "", -1, ah.Path, ah.Domain, ah.Secure, ah.HttpOnly);
+	c.SetCookie("refresh_token", "", -1, ah.Path, ah.Domain, ah.Secure, ah.HttpOnly)
+	c.SetCookie("access_token", "", -1, ah.Path, ah.Domain, ah.Secure, ah.HttpOnly)
 	c.JSON(http.StatusOK, gin.H{
 		"status_code": http.StatusOK,
-		"message": 	 "Logged out successfully",
-	});
+		"message":     "Logged out successfully",
+	})
 }

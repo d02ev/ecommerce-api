@@ -3,11 +3,12 @@ package adapters
 import (
 	"github.com/d02ev/ecommerce-api/internal/user/domain"
 	"github.com/d02ev/ecommerce-api/pkg/models"
+	"github.com/d02ev/ecommerce-api/pkg/shared/entities"
 	"gorm.io/gorm"
 )
 
 type UserRepository struct {
-	db *gorm.DB;
+	db *gorm.DB
 }
 
 func NewUserRepository(db *gorm.DB) *UserRepository {
@@ -17,21 +18,21 @@ func NewUserRepository(db *gorm.DB) *UserRepository {
 func (ur *UserRepository) Save(userEntity *domain.UserEntity) error {
 	// convert the domain entity to the gorm model
 	user := &models.User{
-		Name: userEntity.Name,
-		Email: userEntity.Email,
-		Role: userEntity.Role,
+		Name:         userEntity.Name,
+		Email:        userEntity.Email,
+		Role:         userEntity.Role,
 		PasswordHash: userEntity.PasswordHash,
 		RefreshToken: userEntity.RefreshToken,
 	}
 
 	// try to save the user
-	res := ur.db.Save(user);
+	res := ur.db.Save(user)
 	if res.Error != nil {
-		return res.Error;
+		return res.Error
 	}
 
 	// if saved successfully return nil
-	return nil;
+	return nil
 }
 
 func (ur *UserRepository) FindByID(id uint) (*domain.UserEntity, error) {
@@ -42,15 +43,15 @@ func (ur *UserRepository) FindByID(id uint) (*domain.UserEntity, error) {
 	}
 
 	userEntity := &domain.UserEntity{
-		ID: user.ID,
-		CreatedAt: user.CreatedAt,
-		UpdatedAt: user.UpdatedAt,
-		Name: user.Name,
-		Email: user.Email,
-		Role: user.Role,
+		ID:           user.ID,
+		CreatedAt:    user.CreatedAt,
+		UpdatedAt:    user.UpdatedAt,
+		Name:         user.Name,
+		Email:        user.Email,
+		Role:         user.Role,
 		PasswordHash: user.PasswordHash,
 		RefreshToken: user.RefreshToken,
-		Addresses: make([]domain.AddressEntity, len(user.Addresses)),
+		Addresses:    make([]entities.AddressEntity, len(user.Addresses)),
 	}
 
 	return userEntity, nil
@@ -64,16 +65,26 @@ func (ur *UserRepository) FindByEmail(email string) (*domain.UserEntity, error) 
 	}
 
 	userEntity := &domain.UserEntity{
-		ID: user.ID,
-		CreatedAt: user.CreatedAt,
-		UpdatedAt: user.UpdatedAt,
-		Name: user.Name,
-		Email: user.Email,
-		Role: user.Role,
+		ID:           user.ID,
+		CreatedAt:    user.CreatedAt,
+		UpdatedAt:    user.UpdatedAt,
+		Name:         user.Name,
+		Email:        user.Email,
+		Role:         user.Role,
 		PasswordHash: user.PasswordHash,
 		RefreshToken: user.RefreshToken,
-		Addresses: make([]domain.AddressEntity, len(user.Addresses)),
+		Addresses:    make([]entities.AddressEntity, len(user.Addresses)),
 	}
 
 	return userEntity, nil
+}
+
+func (ur *UserRepository) UpdateRefreshToken(userId uint, refreshToken string) error {
+	var user models.User
+
+	if err := ur.db.Model(&user).Where("id = ?", userId).Update("refresh_token", refreshToken).Error; err != nil {
+		return err
+	}
+
+	return nil
 }
